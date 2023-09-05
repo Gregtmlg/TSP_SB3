@@ -37,12 +37,11 @@ class SimpleImplementation(VehicleImplementation):
     def get_position(self) -> np.ndarray:
         return self.current_position
     
-    def get_battery(self):
+    def get_battery(self) -> int:
         return self.battery
     
     def reset_battery(self):
         self.battery = 100
-        return self.battery
 
 
 # class ArduSubBluerovImplementation(BluerovImplementation):
