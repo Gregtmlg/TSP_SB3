@@ -2,6 +2,7 @@ import gym
 import numpy as np
 from gym import spaces
 from TSP_view_2D import TSPView2D
+from mobile import Vehicle
 
 
 class TSPEasyEnv(gym.Env):
@@ -22,7 +23,9 @@ class TSPEasyEnv(gym.Env):
             mode,
         )
 
-    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=50, randomized_orders=False):
+    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=50, randomized_orders=False, implementation = "simple"):
+
+        self.agent = Vehicle(implementation=implementation)
 
         self.tsp_view = None
         self.map_quad = map_quad
@@ -159,15 +162,16 @@ class TSPEasyEnv(gym.Env):
     def __play_action(self, action):
 
         if action == 0:  # UP
-            self.agt_y = min(self.map_max_y, self.agt_y + 1)
+            self.agent.move_to([self.agt_x, min(self.map_max_y, self.agt_y + 1)])
         elif action == 1:  # DOWN
-            self.agt_y = max(self.map_min_y, self.agt_y - 1)
+            self.agent.move_to([self.agt_x, max(self.map_max_y, self.agt_y - 1)])
         elif action == 2:  # LEFT
-            self.agt_x = max(self.map_min_x, self.agt_x - 1)
+            self.agent.move_to([max(self.map_min_x, self.agt_x - 1), self.agt_y])
         elif action == 3:  # RIGHT
-            self.agt_x = min(self.map_max_x, self.agt_x + 1)
+            self.agent.move_to([min(self.map_max_x, self.agt_x + 1), self.agt_y])
         else:
             raise Exception("action: {action} is invalid")
+        self.agt_x, self.agt_y = self.agent.get_position()[0], self.agent.get_position()[1]
 
         # Check for deliveries
         for ix in range(self.n_orders):
