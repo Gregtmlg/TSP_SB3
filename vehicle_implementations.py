@@ -42,7 +42,7 @@ class SimpleImplementation(VehicleImplementation):
     def get_battery(self) -> int:
         return self.battery
     
-    def reset_battery(self):
+    def reset_battery(self) -> tuple:
         self.battery = 100
         self.battery_efficiency = random.randint(1,20)
         return self.battery, self.battery_efficiency

@@ -1,11 +1,15 @@
-import gym
+import gymnasium as gym
+import ray
+from gymnasium import spaces
 import numpy as np
-from gym import spaces
+from ray import tune
+import random
+import math
 from TSP_view_2D import TSPView2D
 from mobile import Vehicle
 
 
-class TSPEasyEnv(gym.Env):
+class TSPEnv(gym.Env):
     def render(self, mode="human", close=False):
 
         if self.tsp_view is None:
@@ -23,9 +27,13 @@ class TSPEasyEnv(gym.Env):
             mode,
         )
 
-    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=50, randomized_orders=False, implementation = "simple"):
+    def __init__(self, env_config):
 
-        self.agent = Vehicle(implementation=implementation)
+        map_quad = env_config["map_quad"]
+        n_orders = env_config["n_orders"]
+        max_time = env_config["max_time"]
+        randomized_orders = env_config["randomized_orders"]
+        self.agent = Vehicle(implementation=env_config["implementation"])
 
         self.tsp_view = None
         self.map_quad = map_quad
@@ -160,15 +168,28 @@ class TSPEasyEnv(gym.Env):
         return self.__compute_state(), reward, done, info
 
     def __play_action(self, action):
-
+        # scan or not the area to find goal
+        scan = False
         if action == 0:  # UP
-            self.agent.move_to([self.agt_x, min(self.map_max_y, self.agt_y + 1)])
+            coords = [self.agt_x, min(self.map_max_y, self.agt_y + 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 1:  # DOWN
-            self.agent.move_to([self.agt_x, max(self.map_max_y, self.agt_y - 1)])
+            coords = [self.agt_x, max(self.map_max_y, self.agt_y - 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 2:  # LEFT
-            self.agent.move_to([max(self.map_min_x, self.agt_x - 1), self.agt_y])
+            coords = [max(self.map_min_x, self.agt_x - 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 3:  # RIGHT
-            self.agent.move_to([min(self.map_max_x, self.agt_x + 1), self.agt_y])
+            coords = [min(self.map_max_x, self.agt_x + 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         else:
             raise Exception("action: {action} is invalid")
         self.agt_x, self.agt_y = self.agent.get_position()[0], self.agent.get_position()[1]
@@ -226,33 +247,8 @@ class TSPEasyEnv(gym.Env):
         )
 
 
-class TSPMediumEnv(TSPEasyEnv):
-    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=50, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
 
-
-class TSP33Env(TSPEasyEnv):
-    def __init__(self, n_orders=5, map_quad=(3, 3), max_time=100, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
-
-class TSP44Env(TSPEasyEnv):
-    def __init__(self, n_orders=5, map_quad=(4, 4), max_time=500, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
-
-
-class TSPHardEnv(TSPEasyEnv):
-    def __init__(self, n_orders=10, map_quad=(10, 10), max_time=500, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
-
-
-import gym
-import numpy as np
-import random
-from gym import spaces
-from TSP_view_2D import TSPView2D
-
-
-class TSPEasyBatteryEnv(gym.Env):
+class TSPBatteryEnv(gym.Env):
     def render(self, mode="human", close=False):
 
         if self.tsp_view is None:
@@ -270,9 +266,13 @@ class TSPEasyBatteryEnv(gym.Env):
             mode,
         )
 
-    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=50, randomized_orders=False, implementation="simple"):
+    def __init__(self, env_config):
 
-        self.agent = Vehicle(implementation=implementation)
+        map_quad = env_config["map_quad"]
+        n_orders = env_config["n_orders"]
+        max_time = env_config["max_time"]
+        randomized_orders = env_config["randomized_orders"]
+        self.agent = Vehicle(implementation=env_config["implementation"])
 
         self.tsp_view = None
         self.map_quad = map_quad
@@ -509,21 +509,41 @@ class TSPEasyBatteryEnv(gym.Env):
         return factor * self.max_time
                     
 
+#initialisation de Ray pour l'entrainement
+ray.init(ignore_reinit_error=True)
 
-class TSPMediumBatteryEnv(TSPEasyBatteryEnv):
-    def __init__(self, n_orders=4, map_quad=(2, 2), max_time=100, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
+#On donne nos paramètres de configuration pour l'entrainement 
+tune_config = {
+    # select environment wanted : TSPEnv or TSPBatteryEnv
+    "env": TSPEnv,
+    #env_config est la configuration de notre environnement : nombre d'agent, d'objectif, ect
+    "env_config": {
+        "map_quad":(10,10),
+        "n_orders":8,   
+        "max_time":500,
+        "randomized_orders":True,
+        # "implementation":"simple"
+    },
+    "framework": "torch",  # ou "tf" pour TensorFlow
+    #nombre d'agent qui seront entrainer en parallèle
+    "num_workers": 4,
+    "num_learner_workers" : 0,
 
+    #Pour entrainer avec des GPU mettre "num_cpus" a 1 puis décomemnter la ligne " "num_gpus_per_worker": 1," et remplacer 2 pour le nombre de gpu voulu par workers
+    "num_gpus": 0,
+    #"num_gpus_per_worker": 2,
 
-class TSP33BatteryEnv(TSPEasyBatteryEnv):
-    def __init__(self, n_orders=5, map_quad=(3, 3), max_time=100, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
+    #commenter cette ligne si num_gpus = 1 
+    "num_cpus_per_worker": 5,
 
-class TSP33BatteryEnv(TSPEasyBatteryEnv):
-    def __init__(self, n_orders=5, map_quad=(4, 4), max_time=1000, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
+    #si 2 worker et 2 cpu ou gpu par worker alors 4 cpu ou gpu seront utilisé
 
-
-class TSPHardBatteryEnv(TSPEasyBatteryEnv):
-    def __init__(self, n_orders=10, map_quad=(10, 10), max_time=5000, randomized_orders=True):
-        super().__init__(n_orders, map_quad, max_time, randomized_orders)
+    "model": {
+        "fcnet_hiddens": [64, 64],  # Architecture du réseau de neurones (couches cachées)
+    },
+    "optimizer": {
+        "learning_rate": 0.001,  # Taux d'apprentissage
+    },
+}
+                                            #Condition de stop
+analysis = tune.run("PPO", config=tune_config,stop={"timesteps_total": 10000000000000000000000000000000000000000000000000})
