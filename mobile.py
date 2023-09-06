@@ -1,4 +1,4 @@
-from vehicle_implementations import SimpleImplementation #, ArduSubBluerovImplementation
+from vehicle_implementations import SimpleImplementation, ArduSubBluerovImplementation
 
 class Vehicle:
     def __init__(self, implementation="simple"):
@@ -7,8 +7,8 @@ class Vehicle:
         """
         if implementation == "simple":
             self.implementation = SimpleImplementation()
-        # elif implementation == "ardusub":
-        #     self.implementation = ArduSubBluerovImplementation()
+        elif implementation == "ardusub":
+            self.implementation = ArduSubBluerovImplementation()
         else : 
             raise ValueError("Incorrect implementation value. Choose 'ardusub' or 'simple'.")
 
