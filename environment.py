@@ -160,15 +160,28 @@ class TSPEasyEnv(gym.Env):
         return self.__compute_state(), reward, done, info
 
     def __play_action(self, action):
-
+        # scan or not the area to find goal
+        scan = False
         if action == 0:  # UP
-            self.agent.move_to([self.agt_x, min(self.map_max_y, self.agt_y + 1)])
+            coords = [self.agt_x, min(self.map_max_y, self.agt_y + 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 1:  # DOWN
-            self.agent.move_to([self.agt_x, max(self.map_max_y, self.agt_y - 1)])
+            coords = [self.agt_x, max(self.map_max_y, self.agt_y - 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 2:  # LEFT
-            self.agent.move_to([max(self.map_min_x, self.agt_x - 1), self.agt_y])
+            coords = [max(self.map_min_x, self.agt_x - 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 3:  # RIGHT
-            self.agent.move_to([min(self.map_max_x, self.agt_x + 1), self.agt_y])
+            coords = [min(self.map_max_x, self.agt_x + 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         else:
             raise Exception("action: {action} is invalid")
         self.agt_x, self.agt_y = self.agent.get_position()[0], self.agent.get_position()[1]
@@ -430,15 +443,28 @@ class TSPEasyBatteryEnv(gym.Env):
         return self.__compute_state(), reward, done, info
 
     def __play_action(self, action):
-
+        # scan or not the area to find goal
+        scan = False
         if action == 0:  # UP
-            self.agent.move_to([self.agt_x, min(self.map_max_y, self.agt_y + 1)])
+            coords = [self.agt_x, min(self.map_max_y, self.agt_y + 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 1:  # DOWN
-            self.agent.move_to([self.agt_x, max(self.map_max_y, self.agt_y - 1)])
+            coords = [self.agt_x, max(self.map_max_y, self.agt_y - 1)]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 2:  # LEFT
-            self.agent.move_to([max(self.map_min_x, self.agt_x - 1), self.agt_y])
+            coords = [max(self.map_min_x, self.agt_x - 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         elif action == 3:  # RIGHT
-            self.agent.move_to([min(self.map_max_x, self.agt_x + 1), self.agt_y])
+            coords = [min(self.map_max_x, self.agt_x + 1), self.agt_y]
+            if coords[0] in self.o_x and coords[1] in self.o_y:
+                scan = True
+            self.agent.move_to(coords, scan)
         else:
             raise Exception("action: {action} is invalid")
         self.agt_x, self.agt_y = self.agent.get_position()[0], self.agent.get_position()[1]

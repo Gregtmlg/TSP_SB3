@@ -3,14 +3,14 @@ from vehicle_implementations import SimpleImplementation, ArduSubBluerovImplemen
 class Vehicle:
     def __init__(self, implementation="simple"):
         """
-            implementation : choose if you use ArduSub or not ("ardusub" or "simple")
+            implementation : choose if you use Bluerov2 or not ("bluerov2" or "simple")
         """
         if implementation == "simple":
             self.implementation = SimpleImplementation()
-        elif implementation == "ardusub":
+        elif implementation == "bluerov2":
             self.implementation = ArduSubBluerovImplementation()
         else : 
-            raise ValueError("Incorrect implementation value. Choose 'ardusub' or 'simple'.")
+            raise ValueError("Incorrect implementation value. Choose 'bluerov2' or 'simple'.")
 
     def move_to(self, coordinates):
         self.implementation.move_to(coordinates)
