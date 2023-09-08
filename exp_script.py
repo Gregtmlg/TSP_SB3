@@ -44,9 +44,10 @@ import time
 #         "learning_rate": 0.001,  # Taux d'apprentissage
 #     },
 # }
-#                                             #Condition de stop
+# # stop = Condition de stop, checkpoint_config = choose when to save training with checkpoint_frequency or check_point_at_end
 # analysis = tune.run("PPO", name="PPO", config=tune_config,stop={"timesteps_total": 3000000}, checkpoint_config=CheckpointConfig(checkpoint_at_end=True))
 
+# refer cheskpoint path from ray_results
 algo = PPO.from_checkpoint("C:\\Users\\gregg\\ray_results\\PPO\\PPO_TSPEnv_7a4a9_00000_0_2023-09-07_20-58-05\\checkpoint_000750")
 
 env_config = {
@@ -64,6 +65,7 @@ obs = env.reset()
 
 while not done:
     env.render()
+    # check method compute_single_action to be sure it is a prediction from model
     action = algo.compute_single_action(obs)
     obs, reward, done, info = env.step(action)
     time.sleep(0.5)
