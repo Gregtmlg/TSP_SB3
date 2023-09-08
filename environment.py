@@ -3,6 +3,7 @@ import ray
 from gymnasium import spaces
 import numpy as np
 from ray import tune
+import signal
 import random
 import math
 from TSP_view_2D import TSPView2D
@@ -522,41 +523,42 @@ class TSPBatteryEnv(gym.Env):
         return factor * self.max_time
                     
 
-#initialisation de Ray pour l'entrainement
-ray.init(ignore_reinit_error=True)
+# #initialisation de Ray pour l'entrainement
+# ray.init(ignore_reinit_error=True)
 
-#On donne nos paramètres de configuration pour l'entrainement 
-tune_config = {
-    # select environment wanted : TSPEnv or TSPBatteryEnv
-    "env": TSPEnv,
-    #env_config est la configuration de notre environnement : nombre d'agent, d'objectif, ect
-    "env_config": {
-        "map_quad":(10,10),
-        "n_orders":8,   
-        "max_time":500,
-        "randomized_orders":True,
-        # "implementation":"simple"
-    },
-    "framework": "torch",  # ou "tf" pour TensorFlow
-    #nombre d'agent qui seront entrainer en parallèle
-    "num_workers": 4,
-    "num_learner_workers" : 0,
+# #On donne nos paramètres de configuration pour l'entrainement 
+# tune_config = {
+#     # select environment wanted : TSPEnv or TSPBatteryEnv
+#     "env": TSPEnv,
+#     #env_config est la configuration de notre environnement : nombre d'agent, d'objectif, ect
+#     "env_config": {
+#         "map_quad":(10,10),
+#         "n_orders":8,   
+#         "max_time":500,
+#         "randomized_orders":True,
+#         "implementation":"simple"
+#     },
+#     "framework": "torch",  # ou "tf" pour TensorFlow
+#     #nombre d'agent qui seront entrainer en parallèle
+#     "num_workers": 1,
+#     "num_learner_workers" : 0,
 
-    #Pour entrainer avec des GPU mettre "num_cpus" a 1 puis décomemnter la ligne " "num_gpus_per_worker": 1," et remplacer 2 pour le nombre de gpu voulu par workers
-    "num_gpus": 0,
-    #"num_gpus_per_worker": 2,
+#     #Pour entrainer avec des GPU mettre "num_cpus" a 1 puis décomemnter la ligne " "num_gpus_per_worker": 1," et remplacer 2 pour le nombre de gpu voulu par workers
+#     "num_gpus": 0,
+#     #"num_gpus_per_worker": 2,
 
-    #commenter cette ligne si num_gpus = 1 
-    "num_cpus_per_worker": 5,
+#     #commenter cette ligne si num_gpus = 1 
+#     "num_cpus_per_worker": 4,
 
-    #si 2 worker et 2 cpu ou gpu par worker alors 4 cpu ou gpu seront utilisé
+#     #si 2 worker et 2 cpu ou gpu par worker alors 4 cpu ou gpu seront utilisé
 
-    "model": {
-        "fcnet_hiddens": [64, 64],  # Architecture du réseau de neurones (couches cachées)
-    },
-    "optimizer": {
-        "learning_rate": 0.001,  # Taux d'apprentissage
-    },
-}
-                                            #Condition de stop
-analysis = tune.run("PPO", config=tune_config,stop={"timesteps_total": 10000000000000000000000000000000000000000000000000})
+#     "model": {
+#         "fcnet_hiddens": [64, 64],  # Architecture du réseau de neurones (couches cachées)
+#     },
+#     "optimizer": {
+#         "learning_rate": 0.001,  # Taux d'apprentissage
+#     },
+# }
+# signal.signal(signal.SIGINT, signal.SIG_IGN)
+#                                             #Condition de stop
+# analysis = tune.run("PPO", config=tune_config,stop={"timesteps_total": 10000})
